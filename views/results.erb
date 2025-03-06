@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Processing Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .image-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .processed-image {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .debug {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-family: monospace;
+    }
+    .back-button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Processing Results</h1>
+    
+    <div class="debug">
+      <h3>Debug Information:</h3>
+      <p>Original filename: <%= @original_filename %></p>
+      <p>Image dimensions: <%= @processed_image[:width] %>x<%= @processed_image[:height] %></p>
+      <p>Base64 data length: <%= @processed_image[:data].length %></p>
+      <p>Base64 preview: <%= @processed_image[:data][0..50] %>...</p>
+    </div>
+
+    <div class="image-container">
+      <h2>Processed Image</h2>
+      <img src="<%= @processed_image[:data] %>" 
+           alt="Processed image" 
+           class="processed-image"
+           onerror="console.error('Failed to load image')">
+    </div>
+
+    <a href="/" class="back-button">Process Another Image</a>
+  </div>
+
+  <script>
+    // Log any image loading errors
+    document.querySelector('.processed-image').addEventListener('error', function(e) {
+      console.error('Image failed to load');
+    });
+  </script>
+</body>
+</html> 

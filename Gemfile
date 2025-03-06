@@ -1,0 +1,12 @@
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'sinatra-reloader'
+gem 'mini_magick'
+gem 'chunky_png'
+gem 'base64'
+gem 'sinatra-contrib'
+gem 'thin'
+gem 'pry'
+gem 'pry-byebug'
+gem 'pry-remote' 

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Palette Processor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-form {
+            text-align: center;
+        }
+        .file-input {
+            margin: 20px 0;
+        }
+        .image-preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 0 auto 20px;
+            display: none;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+        .submit-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            color: #666;
+        }
+        .loading.active {
+            display: block;
+        }
+        .error {
+            color: #f44336;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .form-group small {
+            color: #666;
+            display: block;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #processed-image {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        .checkbox-group label {
+            margin-bottom: 0;
+        }
+        .palette-upload {
+            margin-left: 24px;
+            margin-top: 5px;
+            display: none;
+        }
+        .palette-upload.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Palette Processor</h1>
+        
+        <% if @error %>
+            <div class="error"><%= @error %></div>
+        <% end %>
+
+        <div class="upload-form">
+            <div class="image-preview" id="imagePreview">
+                <img id="previewImage" src="" alt="Preview">
+            </div>
+            <form id="uploadForm">
+                <div class="file-input">
+                    <input type="file" name="image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="size">Image Size (e.g., 32x32):</label>
+                    <input type="text" id="size" name="size" placeholder="32x32">
+                    <small>Leave empty for default (32x32)</small>
+                </div>
+                <div class="form-group">
+                    <label for="colors">Number of Colors:</label>
+                    <input type="number" id="colors" name="colors" min="2" max="256" placeholder="6">
+                    <small>Leave empty for default (6)</small>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="grayscale" name="grayscale">
+                        <label for="grayscale">Grayscale?</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="palette_swap" name="palette_swap" checked>
+                        <label for="palette_swap">Palette Swap?</label>
+                    </div>
+                    <div class="palette-upload" id="paletteUpload">
+                        <label for="palette">Custom Palette (GPL):</label>
+                        <input type="file" id="palette" name="palette" accept=".gpl">
+                        <small>Leave empty for default palette</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="format">Output Format:</label>
+                    <input type="text" id="format" name="format" placeholder="png">
+                    <small>Leave empty for default (png)</small>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">Process Image</button>
+                <div class="loading" id="loadingText">Processing image... Please wait...</div>
+            </form>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Show palette upload on page load if palette swap is checked
+        document.addEventListener('DOMContentLoaded', function() {
+            const paletteSwap = document.getElementById('palette_swap');
+            const paletteUpload = document.getElementById('paletteUpload');
+            paletteUpload.classList.toggle('active', paletteSwap.checked);
+        });
+
+        // Add image preview functionality
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            const previewImage = document.getElementById('previewImage');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+                previewImage.src = '';
+            }
+        });
+
+        // Handle palette swap checkbox
+        document.getElementById('palette_swap').addEventListener('change', function(e) {
+            const paletteUpload = document.getElementById('paletteUpload');
+            paletteUpload.classList.toggle('active', e.target.checked);
+        });
+
+        // Handle grayscale checkbox
+        document.getElementById('grayscale').addEventListener('change', function(e) {
+            const paletteSwap = document.getElementById('palette_swap');
+            const paletteUpload = document.getElementById('paletteUpload');
+            
+            if (e.target.checked) {
+                paletteSwap.checked = false;
+                paletteUpload.classList.remove('active');
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingText = document.getElementById('loadingText');
+            const resultDiv = document.getElementById('result');
+            
+            // Disable submit button and show loading
+            submitBtn.disabled = true;
+            loadingText.classList.add('active');
+            resultDiv.innerHTML = '';
+
+            const formData = new FormData();
+            const imageFile = document.querySelector('input[type="file"]').files[0];
+            formData.append('image', imageFile);
+
+            // Add optional parameters if they have values
+            const size = document.getElementById('size').value;
+            const colors = document.getElementById('colors').value;
+            const format = document.getElementById('format').value;
+            const grayscale = document.getElementById('grayscale').checked;
+            const paletteSwap = document.getElementById('palette_swap').checked;
+            const paletteFile = document.getElementById('palette').files[0];
+
+            if (size) formData.append('size', size);
+            if (colors) formData.append('colors', colors);
+            if (format) formData.append('format', format);
+            formData.append('grayscale', grayscale);
+            formData.append('palette_swap', paletteSwap);
+            if (paletteFile) formData.append('palette', paletteFile);
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <h2>Processed Image</h2>
+                    <img id="processed-image" src="${result.data}" alt="Processed image">
+                    <p>Dimensions: ${result.width}x${result.height}</p>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">Error processing image: ${error.message}</div>
+                `;
+            } finally {
+                // Re-enable submit button and hide loading
+                submitBtn.disabled = false;
+                loadingText.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html> 
