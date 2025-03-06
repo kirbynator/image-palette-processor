@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: image-palette-processor
+    env: ruby
+    buildCommand: |
+      apt-get update && apt-get install -y imagemagick
+      bundle install
+    startCommand: rackup -p $PORT
+    envVars:
+      - key: IMAGEMAGICK_BINARY
+        value: /usr/bin/convert 
