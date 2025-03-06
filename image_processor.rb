@@ -3,6 +3,15 @@ require 'base64'
 require 'tempfile'
 require 'chunky_png'
 
+# Configure MiniMagick to use the correct ImageMagick binary
+MiniMagick.configure do |config|
+  config.cli = :imagemagick
+  config.timeout = 30
+  config.whiny = true
+  config.verbose = true
+  config.debug = true
+  config.binary_path = ENV['IMAGEMAGICK_BINARY'] || '/usr/bin'
+end
 
 class ImageProcessor
   DEFAULT_SIZE = "32x32"
