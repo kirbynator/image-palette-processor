@@ -4,9 +4,5 @@ gem 'sinatra'
 gem 'sinatra-reloader'
 gem 'mini_magick'
 gem 'chunky_png'
-gem 'base64'
-gem 'sinatra-contrib'
-gem 'thin'
-gem 'pry'
-gem 'pry-byebug'
-gem 'pry-remote' 
+gem 'thin'  # A fast and reliable web server for running Sinatra
+gem 'rack'  # Required for running the application with Rack 
