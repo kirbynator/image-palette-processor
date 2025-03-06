@@ -5,7 +5,6 @@ require 'chunky_png'
 
 # Configure MiniMagick to use the correct ImageMagick binary
 MiniMagick.configure do |config|
-  config.cli = :imagemagick
   config.timeout = 30
   config.whiny = true
   config.verbose = true
